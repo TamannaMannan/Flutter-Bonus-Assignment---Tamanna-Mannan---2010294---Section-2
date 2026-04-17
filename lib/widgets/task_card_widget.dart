@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 class TaskCardWidget extends StatelessWidget {
   final String title;
   final String subtitle;
-  final IconData? icon;
+  final VoidCallback? onDelete; // Important for Task 4!
 
-  final VoidCallback? onTap;
-
-  const TaskCardWidget({super.key, required this.title, required this.subtitle, this.icon, this.onTap});
-
+  const TaskCardWidget({
+    required this.title,
+    required this.subtitle,
+    this.onDelete,
+  });
   @override
   Widget build(BuildContext context) {
 
