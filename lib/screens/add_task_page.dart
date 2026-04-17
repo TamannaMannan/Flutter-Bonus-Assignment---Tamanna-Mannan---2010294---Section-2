@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ui_class/data/dummy_data.dart';
-import 'package:flutter_ui_class/models/card_data_model.dart';
-import 'package:flutter_ui_class/providers/task_management_provider.dart';
+import 'package:flutter_ui_class/models/task_model.dart'; // IMPORT YOUR NEW MODEL
+import 'package:flutter_ui_class/repositories/task_repository.dart'; // IMPORT YOUR REPOSITORY
 import 'package:flutter_ui_class/utils/validators.dart';
 import 'package:flutter_ui_class/widgets/core_input_field.dart';
 import 'package:flutter_ui_class/widgets/password_input_filed.dart';
-import 'package:provider/provider.dart';
 
 class AddTaskPage extends StatefulWidget {
   const AddTaskPage({super.key});
@@ -22,114 +20,108 @@ class _AddTaskPageState extends State<AddTaskPage> {
   final _descriptionController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
-
-  late TaskManagementProvider taskProvider;
-
-  @override
-  void initState() {
-    taskProvider = Provider.of<TaskManagementProvider>(context, listen: false);
-    super.initState();
-  }
+  
+  // Initialize your repository
+  final TaskRepository _repository = TaskRepository();
 
   @override
   void dispose() {
-    _titleController.clear();
-    _assignedToController.clear();
-    _phoneNumberController.clear();
-    _passwordController.clear();
-    _descriptionController.clear();
+    _titleController.dispose();
+    _assignedToController.dispose();
+    _phoneNumberController.dispose();
+    _passwordController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Add Task"),
+        title: const Text("Add Task"),
         backgroundColor: Colors.purpleAccent,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              CoreInputField(
-                controller: _titleController,
-                keyboardType: TextInputType.text,
-                maxLines: 1,
-                labelText: "Task Title",
-                validator: CustomValidators.validateTaskTitle,
-              ),
-
-              const SizedBox(height: 20),
-              CoreInputField(
-                controller: _assignedToController,
-                keyboardType: TextInputType.text,
-                maxLines: 1,
-                labelText: "Assigned To",
-                validator: CustomValidators.validateAssignedTo,
-              ),
-
-              const SizedBox(height: 20),
-              CoreInputField(
-                controller: _phoneNumberController,
-                keyboardType: TextInputType.phone,
-                maxLines: 1,
-                labelText: "Phone Number",
-                validator: CustomValidators.validatePhoneNumber,
-              ),
-
-              const SizedBox(height: 20),
-              PasswordInputFiled(controller: _passwordController),
-
-              const SizedBox(height: 40),
-              CoreInputField(
-                controller: _descriptionController,
-                keyboardType: TextInputType.multiline,
-                maxLines: 6,
-                labelText: "Task Description",
-                validator: CustomValidators.validateDescription,
-              ),
-            ],
+      body: SingleChildScrollView( // Added scroll view to prevent overflow
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                CoreInputField(
+                  controller: _titleController,
+                  keyboardType: TextInputType.text,
+                  maxLines: 1,
+                  labelText: "Task Title",
+                  validator: CustomValidators.validateTaskTitle,
+                ),
+                const SizedBox(height: 20),
+                CoreInputField(
+                  controller: _assignedToController,
+                  keyboardType: TextInputType.text,
+                  maxLines: 1,
+                  labelText: "Assigned To",
+                  validator: CustomValidators.validateAssignedTo,
+                ),
+                const SizedBox(height: 20),
+                CoreInputField(
+                  controller: _phoneNumberController,
+                  keyboardType: TextInputType.phone,
+                  maxLines: 1,
+                  labelText: "Phone Number",
+                  validator: CustomValidators.validatePhoneNumber,
+                ),
+                const SizedBox(height: 20),
+                PasswordInputFiled(controller: _passwordController),
+                const SizedBox(height: 40),
+                CoreInputField(
+                  controller: _descriptionController,
+                  keyboardType: TextInputType.multiline,
+                  maxLines: 6,
+                  labelText: "Task Description",
+                  validator: CustomValidators.validateDescription,
+                ),
+              ],
+            ),
           ),
         ),
       ),
-
       bottomNavigationBar: Container(
-        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
         child: ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
             if (_formKey.currentState!.validate()) {
-              final String taskDetails =
-                  "Assigned to: ${_assignedToController.text} \nPhone: ${_phoneNumberController.text} \nDescription: ${_descriptionController.text} \n \n The task Password is ${_passwordController.text}";
-
-              taskProvider.addTaskExternal(
-                CardDataModel(
-                  title: _titleController.text,
-                  subtitle: taskDetails,
-                ),
+              
+              // 1. Create the TaskModel (Task 3 Requirement)
+              final newTask = TaskModel(
+                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                title: _titleController.text,
+                description: _descriptionController.text,
+                createdAt: DateTime.now().toIso8601String(),
               );
 
-              Navigator.of(context).pop();
+              // 2. Call the Repository (Task 5 Requirement)
+              await _repository.addTask(newTask);
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    "Task added successfully!,",
-                    style: TextStyle(color: Colors.white),
+              // 3. UI Feedback
+              if (mounted) {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Task added to Firebase successfully!"),
+                    backgroundColor: Colors.green,
                   ),
-                  backgroundColor: Colors.green,
-                ),
-              );
+                );
+              }
             }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.purpleAccent,
             foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 16),
-            textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          child: Text("Add Task"),
+          child: const Text("Add Task to Cloud"),
         ),
       ),
     );
