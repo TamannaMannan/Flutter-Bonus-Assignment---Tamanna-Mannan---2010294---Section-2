@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_ui_class/models/task_model.dart'; // Import TaskModel
-import 'package:flutter_ui_class/repositories/task_repository.dart'; // Import Repository
-import 'package:flutter_ui_class/screens/add_task_page.dart';
+import 'package:flutter_ui_class/models/task_model.dart';
+import 'package:flutter_ui_class/repositories/task_repository.dart';
 import 'package:flutter_ui_class/widgets/task_card_widget.dart';
+import 'package:flutter_ui_class/screens/add_task_page.dart';
 
 class UiPage extends StatefulWidget {
   const UiPage({super.key});
